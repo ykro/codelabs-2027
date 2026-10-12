@@ -1,0 +1,12 @@
+[project]
+name = "taller-volcan"
+version = "1.0.0"
+description = "Servidor MCP y agente con Gemini para la agenda de un taller mecánico ficticio"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp==2.3.0",
+    "google-genai==2.29.0",
+]
+
+[dependency-groups]
+pruebas = ["pytest>=8", "pytest-asyncio>=1", "httpx>=0.28"]

@@ -1,0 +1,8 @@
+node_modules/
+sitio/dist/
+__pycache__/
+.venv/
+*.pyc
+.env
+.DS_Store
+.pytest_cache/

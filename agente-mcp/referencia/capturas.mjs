@@ -1,0 +1,37 @@
+// Capturas de la referencia en línea (teléfono y laptop): chat, aprobación pendiente y aprobada.
+//   node agente-mcp/referencia/capturas.mjs <url-referencia> <carpeta-salida>
+import { chromium } from 'playwright';
+const [url, salida] = process.argv.slice(2);
+const navegador = await chromium.launch();
+const tel = await navegador.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+const lap = await navegador.newContext({ viewport: { width: 1280, height: 860 } });
+const chat = await tel.newPage();
+await chat.goto(url);
+await chat.screenshot({ path: `${salida}/chat-inicio-telefono.png` });
+await chat.locator('#sugerencias button').first().click();
+await chat.locator('.boton-aprobar').waitFor({ timeout: 90000 });
+await chat.waitForTimeout(500);
+await chat.screenshot({ path: `${salida}/chat-telefono.png` });
+const enlace = await chat.locator('.boton-aprobar').getAttribute('href');
+const ancho = await chat.evaluate(() => document.documentElement.scrollWidth);
+const aprobar = await tel.newPage();
+await aprobar.goto(enlace);
+await aprobar.screenshot({ path: `${salida}/aprobar-telefono.png` });
+await aprobar.getByRole('button', { name: 'Aprobar cita' }).click();
+await aprobar.waitForLoadState();
+await aprobar.screenshot({ path: `${salida}/aprobada-telefono.png` });
+await chat.locator('#sugerencias button', { hasText: 'Ya aprobé' }).click();
+await chat.waitForFunction(() => document.querySelectorAll('.cuenta').length >= 2, null, { timeout: 90000 });
+await chat.waitForTimeout(500);
+const alto = await chat.evaluate(() => document.querySelector('header').offsetHeight + document.getElementById('hilo').scrollHeight + document.querySelector('footer').offsetHeight);
+await chat.setViewportSize({ width: 390, height: alto });
+await chat.waitForTimeout(300);
+await chat.screenshot({ path: `${salida}/chat-final-telefono.png` });
+const l = await lap.newPage();
+await l.goto(new URL('/citas', url).href);
+await l.screenshot({ path: `${salida}/agenda-laptop.png` });
+const t2 = await tel.newPage(); await t2.goto(new URL('/citas', url).href);
+await t2.screenshot({ path: `${salida}/agenda-telefono.png` });
+const anchos = [ancho, await aprobar.evaluate(() => document.documentElement.scrollWidth), await t2.evaluate(() => document.documentElement.scrollWidth)];
+console.log('anchos (deben ser <= 390):', anchos.join(', '), '· enlace:', enlace.replace(/^https?:\/\/[^/]+/, ''));
+await navegador.close();

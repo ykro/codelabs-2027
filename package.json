@@ -1,0 +1,12 @@
+{
+  "name": "codelabs-2027",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sitio": "uv run sitio/build.py --check",
+    "revisar-sitio": "node scripts/revisar_sitio.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{{TITULO}} · Codelabs 2027</title>
+<meta name="description" content="{{RESUMEN}}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<link rel="stylesheet" href="codigo.css">
+</head>
+<body class="taller t-{{SLUG}}">
+<header class="barra">
+  <a class="marca" href="index.html">Codelabs 2027</a>
+  <div class="barra-titulo">{{TITULO}}</div>
+  <div class="progreso" aria-hidden="true"><span id="progreso"></span></div>
+</header>
+<div class="marco">
+  <nav class="pasos" aria-label="Pasos del taller">
+    <details id="menu-pasos" open>
+      <summary><span id="paso-actual">Pasos</span><span class="chev" aria-hidden="true"></span></summary>
+      <ol>{{NAV}}</ol>
+    </details>
+  </nav>
+  <main>
+    <div class="portada">
+      <p class="charla">{{CHARLA}}</p>
+      <h1>{{TITULO}}</h1>
+      <p class="resumen">{{RESUMEN}}</p>
+      <p class="datos"><span>{{TOTAL}} pasos</span><span>{{DURACION}} min</span></p>
+      {{REFERENCIA}}
+    </div>
+    {{PASOS}}
+  </main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

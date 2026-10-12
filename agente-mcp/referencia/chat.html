@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Taller Volcán · asistente de citas</title>
+<meta name="description" content="Referencia del codelab «Haz que un agente use tu app»: un agente con Gemini pide citas por MCP y tú las apruebas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --tinta:#1c1d21; --suave:#5b5f6b; --borde:#e3e5ea; --fondo:#f6f6f3; --lava:#c2410c; --lava-fondo:#fff4ed;
+        --ok:#15803d; --tu:#1c1d21; }
+* { box-sizing:border-box; }
+html, body { height:100%; }
+body { margin:0; background:var(--fondo); color:var(--tinta); font:16px/1.5 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+       display:flex; flex-direction:column; }
+header { background:#fff; border-bottom:1px solid var(--borde); padding:12px 16px; }
+.barra { max-width:680px; margin:0 auto; display:flex; align-items:center; gap:10px; }
+.logo { display:grid; place-items:center; width:36px; height:36px; border-radius:10px; background:var(--lava); color:#fff; font-size:18px; flex:none; }
+.barra h1 { font-size:17px; margin:0; line-height:1.2; }
+.barra p { margin:0; font-size:13px; color:var(--suave); }
+.barra a { margin-left:auto; font-size:15px; color:var(--lava); font-weight:600; text-decoration:none; padding:10px 4px; }
+main { flex:1; overflow-y:auto; }
+.hilo { max-width:680px; margin:0 auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+.nota { background:var(--lava-fondo); border:1px solid #fed7aa; color:#7c2d12; border-radius:12px; padding:12px 14px; font-size:14px; }
+.nota strong { display:block; font-size:15px; margin-bottom:2px; }
+.msg { max-width:88%; padding:12px 14px; border-radius:16px; white-space:pre-wrap; overflow-wrap:anywhere; font-size:16px; }
+.tu { align-self:flex-end; background:var(--tu); color:#fff; border-bottom-right-radius:4px; }
+.agente { align-self:flex-start; background:#fff; border:1px solid var(--borde); border-bottom-left-radius:4px; }
+.agente a { color:var(--lava); font-weight:600; }
+.pasos { align-self:flex-start; display:flex; flex-direction:column; gap:6px; max-width:100%; }
+.paso { font:13px/1.4 "JetBrains Mono", ui-monospace, monospace; color:var(--suave); background:#fff; border:1px dashed var(--borde);
+        border-radius:10px; padding:6px 10px; overflow-wrap:anywhere; }
+.paso.pide { color:#7c2d12; border-color:#fdba74; background:var(--lava-fondo); }
+.boton-aprobar { display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:0 18px; margin-top:10px;
+                 border-radius:12px; background:var(--ok); color:#fff !important; text-decoration:none; font-weight:600; }
+.cuenta { align-self:flex-start; font-size:13px; color:var(--suave); }
+.error { align-self:stretch; background:#fef3f2; color:#7a1a12; border:1px solid #f1b8b2; border-radius:12px; padding:12px 14px; font-size:15px; }
+.escribiendo { align-self:flex-start; color:var(--suave); font-size:15px; }
+footer { background:#fff; border-top:1px solid var(--borde); padding:10px 16px calc(10px + env(safe-area-inset-bottom)); }
+.form { max-width:680px; margin:0 auto; }
+.sugerencias { display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; scrollbar-width:none; }
+.sugerencias button { flex:none; min-height:44px; padding:0 14px; border-radius:999px; border:1px solid var(--borde); background:#fff;
+                      font:inherit; font-size:15px; color:var(--tinta); cursor:pointer; }
+form { display:flex; gap:8px; }
+input { flex:1; min-width:0; min-height:48px; padding:0 14px; border:1px solid #cfd2d9; border-radius:12px; font:inherit; font-size:16px; background:#fff; }
+input:focus { outline:2px solid var(--lava); outline-offset:1px; }
+form button { min-height:48px; min-width:84px; border:0; border-radius:12px; background:var(--lava); color:#fff; font:inherit; font-weight:600; font-size:16px; cursor:pointer; }
+form button:disabled { opacity:.5; }
+</style>
+</head>
+<body>
+<header><div class="barra"><span class="logo">▲</span>
+  <div><h1>Taller Volcán</h1><p>Agente con Gemini + servidor MCP</p></div>
+  <a href="/citas" target="_blank" rel="noopener">Agenda</a></div></header>
+<main id="main"><div class="hilo" id="hilo">
+  <div class="nota"><strong>Demo del codelab «Haz que un agente use tu app»</strong>
+  El agente consulta servicios y horarios solo; para pedir una cita te da un enlace y tú apruebas. Datos ficticios en memoria: se borran cada día.
+  Límite: {{LIMITE}} mensajes por persona al día. Modelo: {{MODELO}}.</div>
+  <div class="msg agente">Hola. Puedo pedir citas en Taller Volcán. Prueba: «agenda un cambio de aceite para el viernes en la mañana».</div>
+</div></main>
+<footer><div class="form">
+  <div class="sugerencias" id="sugerencias">
+    <button type="button">Agenda un cambio de aceite para el viernes en la mañana</button>
+    <button type="button">Ya aprobé</button>
+    <button type="button">¿Qué servicios tienen y cuánto cuestan?</button>
+  </div>
+  <form id="form"><input id="texto" autocomplete="off" maxlength="400" placeholder="Escribe tu mensaje" aria-label="Mensaje">
+  <button id="enviar">Enviar</button></form>
+</div></footer>
+<script>
+const hilo = document.getElementById('hilo'), main = document.getElementById('main');
+const form = document.getElementById('form'), texto = document.getElementById('texto'), enviar = document.getElementById('enviar');
+let anterior = null;
+
+function escapar(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function enlazar(s) {
+  return escapar(s).replace(/https?:\/\/[^\s<)]+/g, url => {
+    const limpio = url.replace(/[.,;:]+$/, '');
+    return `<a href="${limpio}" target="_blank" rel="noopener">${limpio}</a>` + url.slice(limpio.length);
+  });
+}
+function agregar(clase, html) {
+  const d = document.createElement('div'); d.className = clase; d.innerHTML = html; hilo.appendChild(d);
+  main.scrollTop = main.scrollHeight; return d;
+}
+async function mandar(mensaje) {
+  if (!mensaje) return;
+  agregar('msg tu', escapar(mensaje)); texto.value = ''; enviar.disabled = true;
+  const espera = agregar('escribiendo', 'El agente está pensando…');
+  try {
+    const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mensaje, anterior }) });
+    const datos = await r.json(); espera.remove();
+    if (!r.ok) { agregar('error', escapar(datos.error || 'Algo falló.')); return; }
+    anterior = datos.anterior;
+    if (datos.pasos.length) agregar('pasos', datos.pasos.map(p => `<div class="paso ${p.includes('pide') ? 'pide' : ''}">${escapar(p.trim().replace(/^· /, ''))}</div>`).join(''));
+    const m = agregar('msg agente', enlazar(datos.respuesta || ''));
+    const enlace = (datos.respuesta || '').match(/https?:\/\/\S+\/aprobar\/[A-Z0-9-]+/);
+    if (enlace) m.insertAdjacentHTML('beforeend', `<br><a class="boton-aprobar" href="${escapar(enlace[0])}" target="_blank" rel="noopener">Abrir para aprobar</a>`);
+    agregar('cuenta', `Llamadas a Gemini: ${datos.llamadas} · te quedan ${datos.restantes} mensajes hoy`);
+  } catch (e) { espera.remove(); agregar('error', 'No hubo conexión. Intenta de nuevo.'); }
+  finally { enviar.disabled = false; }
+}
+form.addEventListener('submit', e => { e.preventDefault(); mandar(texto.value.trim()); });
+document.getElementById('sugerencias').addEventListener('click', e => { if (e.target.tagName === 'BUTTON') mandar(e.target.textContent); });
+</script>
+</body>
+</html>
