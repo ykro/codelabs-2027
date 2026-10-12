@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block titulo %}Auditoría para agentes · {{ TIENDA.nombre }}{% endblock %}
+{% block head %}
+<style>
+.auditoria { max-width: 680px; margin: 0 auto; padding: 8px 0 24px; }
+.auditoria h1 { font-size: clamp(26px, 6vw, 34px); line-height: 1.2; margin: 8px 0 4px; }
+.auditoria h2 { font-size: 20px; margin: 0 0 4px; }
+.atajos { display: grid; gap: 10px; margin: 16px 0; }
+.boton { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 18px; border-radius: 10px; background: var(--cafe); color: #fff; font-weight: 600; text-decoration: none; }
+.boton.secundario { background: #fff; color: var(--tinta); border: 1px solid #CDBFAF; }
+.otra { display: grid; gap: 10px; padding: 14px; background: var(--hoja); border: 1px solid var(--linea); border-radius: var(--r); }
+.otra label { display: grid; gap: 4px; font-weight: 500; font-size: 15px; }
+.error { background: #FBEDE9; color: var(--no); padding: 10px 14px; border-radius: 10px; }
+.reporte { margin: 20px 0; }
+.puntaje { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0 0 8px; }
+.puntaje strong { font-size: 44px; line-height: 1; color: var(--cafe); }
+.puntaje span { color: var(--suave); font-size: 15px; overflow-wrap: anywhere; }
+.puntos { list-style: none; margin: 0; padding: 0; background: var(--hoja); border: 1px solid var(--linea); border-radius: var(--r); }
+.puntos li { display: flex; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--linea); }
+.puntos li:first-child { border-top: 0; }
+.marca-punto { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--ok-f); color: var(--ok); }
+.falta .marca-punto { background: #FBEDE9; color: var(--no); }
+.puntos p { margin: 0; }
+.etiqueta { font-weight: 600; }
+.evidencia, .arreglo { font-size: 15px; color: var(--suave); overflow-wrap: anywhere; }
+.demo { margin-top: 28px; padding: 16px; background: var(--hoja); border: 1px solid var(--linea); border-radius: var(--r); }
+.demo button { width: 100%; }
+@media (min-width: 720px) { .atajos { grid-template-columns: 1fr 1fr; } }
+</style>
+{% endblock %}
+{% block contenido %}
+<article class="auditoria">
+  <h1>Auditoría para agentes</h1>
+  <p class="nota">Los 8 puntos que revisa un agente de compras antes de confiar en una tienda. Solo lee la tienda; nunca compra.</p>
+  <div class="atajos">
+    <a class="boton" href="/auditoria?url={{ propia | urlencode }}">Auditar esta tienda</a>
+    {% if inicio %}<a class="boton secundario" href="/auditoria?url={{ inicio | urlencode }}">Auditar la tienda de inicio</a>{% endif %}
+  </div>
+  <form method="get" action="/auditoria" class="otra">
+    <label>O audita otra tienda pública
+      <input name="url" type="url" inputmode="url" placeholder="https://tu-tienda.example" value="{{ url if url not in [propia, inicio] else '' }}">
+    </label>
+    <button type="submit">Auditar</button>
+  </form>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  {% if reporte %}
+  <section class="reporte">
+    <p class="puntaje"><strong>{{ reporte.score }}/{{ reporte.total }}</strong><span>{{ reporte.url }}</span></p>
+    <ul class="puntos">
+      {% for i in reporte["items"] %}
+      <li class="{{ 'ok' if i.ok else 'falta' }}">
+        <span class="marca-punto" aria-hidden="true">{{ '✓' if i.ok else '✗' }}</span>
+        <div><p class="etiqueta">{{ i.label }}</p><p class="evidencia">{{ i.evidence }}</p>
+        {% if i.fix %}<p class="arreglo">Qué hacer: {{ i.fix }}</p>{% endif %}</div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  <section class="demo">
+    <h2>Prueba la aprobación</h2>
+    <p class="nota">Crea una compra de ejemplo por la API de checkout, como lo hace el agente del taller, y apruébala o recházala desde tu teléfono. No se cobra nada.</p>
+    <form method="post" action="/demo/compra"><button type="submit">Crear una compra de ejemplo</button></form>
+  </section>
+</article>
+{% endblock %}

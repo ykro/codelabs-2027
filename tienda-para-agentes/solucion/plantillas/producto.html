@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}{{ p.nombre }} · {{ TIENDA.nombre }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ jsonld | tojson }}</script>
+{% endblock %}
+{% block contenido %}
+<article class="ficha">
+  <img class="ficha-foto" src="/static/img/{{ p.slug }}.jpg" alt="Bolsa de café {{ p.nombre }}" width="480" height="480">
+  <div>
+    <p class="region">{{ p.region }} · {{ p.altura }} · proceso {{ p.proceso | lower }} · tueste {{ p.tueste | lower }}</p>
+    <h1>{{ p.nombre }}</h1>
+    <p class="notas">{{ p.notas }}</p>
+    <h2>Presentaciones</h2>
+    <ul class="variantes">
+      {% for v in p.variantes %}
+      <li class="{{ '' if v.disponible else 'agotada' }}">
+        <span>{{ v.presentacion }}</span>
+        <span class="precio">{{ quetzales(v.precio) }}</span>
+        <span class="estado">{{ 'Disponible' if v.disponible else 'Agotado' }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    <form class="pedir" method="post" action="/pedidos">
+      <label>Presentación
+        <select name="sku">
+          {% for v in p.variantes if v.disponible %}<option value="{{ v.sku }}">{{ v.presentacion }} · {{ quetzales(v.precio) }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Cantidad <input name="cantidad" type="number" min="1" max="10" value="1"></label>
+      <label>Tu nombre <input name="nombre" autocomplete="name" required></label>
+      <button type="submit">Pedir</button>
+    </form>
+    <p class="envio">Envío estándar Q20.00: llega en 2 a 3 días hábiles. <a href="/envios">Ver envíos</a></p>
+  </div>
+</article>
+{% endblock %}

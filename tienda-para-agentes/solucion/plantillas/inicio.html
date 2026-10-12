@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block contenido %}
+<section class="portada">
+  <h1>Café de altura, tostado cada semana</h1>
+  <p>{{ TIENDA.lema }} Envío a toda Guatemala.</p>
+</section>
+<section class="rejilla">
+  {% for p in productos %}
+  <a class="tarjeta" href="/cafe/{{ p.slug }}">
+    <img src="/static/img/{{ p.slug }}.jpg" alt="Bolsa de café {{ p.nombre }}" width="320" height="320">
+    <div class="tarjeta-texto">
+      <p class="region">{{ p.region }} · {{ p.altura }}</p>
+      <h2>{{ p.nombre }}</h2>
+      <p class="notas">{{ p.notas }}</p>
+      <p class="precio">Desde {{ quetzales(p.variantes | map(attribute="precio") | min) }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</section>
+{% endblock %}

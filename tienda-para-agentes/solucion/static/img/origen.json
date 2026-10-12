@@ -1,0 +1,18 @@
+{
+  "huehuetenango-altura": {
+    "modelo": "gemini-3.1-flash-lite-image (Vertex AI)",
+    "prompt": "Product photo for a small specialty coffee roaster's online shop. A plain kraft paper coffee bag with a simple paper label (no readable text, no logos), standing on a light cream table, soft daylight, minimal, warm, clean background, square framing. Next to the bag: a small pile of whole roasted coffee beans and a few red coffee cherries."
+  },
+  "antigua-volcan": {
+    "modelo": "gemini-3.1-flash-lite-image (Vertex AI)",
+    "prompt": "Product photo for a small specialty coffee roaster's online shop. A plain kraft paper coffee bag with a simple paper label (no readable text, no logos), standing on a light cream table, soft daylight, minimal, warm, clean background, square framing. Next to the bag: a small ceramic cup of espresso and a sprig of coffee leaves."
+  },
+  "acatenango-miel": {
+    "modelo": "gemini-3.1-flash-lite-image (Vertex AI)",
+    "prompt": "Product photo for a small specialty coffee roaster's online shop. A plain kraft paper coffee bag with a simple paper label (no readable text, no logos), standing on a light cream table, soft daylight, minimal, warm, clean background, square framing. Next to the bag: a small bowl of coarse ground coffee and a piece of panela (raw cane sugar)."
+  },
+  "coban-nublado": {
+    "modelo": "gemini-3.1-flash-lite-image (Vertex AI)",
+    "prompt": "Product photo for a small specialty coffee roaster's online shop. A plain kraft paper coffee bag with a simple paper label (no readable text, no logos), standing on a light cream table, soft daylight, minimal, warm, clean background, square framing. Next to the bag: a glass French press with coffee and some walnuts."
+  }
+}

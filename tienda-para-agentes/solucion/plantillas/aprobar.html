@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Aprobar compra · {{ TIENDA.nombre }}{% endblock %}
+{% block contenido %}
+{% set grupo = c.fulfillment.methods[0].groups[0] %}
+{% set envio = grupo.options | selectattr("id", "equalto", grupo.selected_option_id) | first %}
+<article class="aprobacion">
+  {% if c.status == "completed" %}
+    <p class="sello ok">Compra aprobada</p>
+    <h1>{{ c.order.label }} confirmado</h1>
+    <p>El agente ya ve la sesión como <code>completed</code>. Te escribimos por WhatsApp para coordinar la entrega.</p>
+  {% elif c.status == "canceled" %}
+    <p class="sello no">Compra rechazada</p>
+    <h1>No se hizo ningún pedido</h1>
+    <p>El agente ve la sesión como <code>canceled</code>.</p>
+  {% else %}
+    <p class="sello">Un agente preparó esta compra</p>
+    <h1>¿Apruebas este pedido?</h1>
+    <p class="nota">Revisa los datos. La tienda solo hace el pedido si tú lo apruebas aquí.</p>
+  {% endif %}
+  <dl class="resumen">
+    {% for li in c.line_items %}
+    <div><dt>{{ li.quantity }} × {{ li.item.title }}</dt><dd>{{ quetzales(li.totals[-1].amount) }}</dd></div>
+    {% endfor %}
+    <div><dt>{{ envio.title }}<small>{{ envio.description.plain }}</small></dt><dd>{{ quetzales(envio.totals[0].amount) }}</dd></div>
+    <div class="total"><dt>Total</dt><dd>{{ quetzales(c.totals[-1].amount) }}</dd></div>
+  </dl>
+  <p class="nota">Pago contra entrega: hoy no se cobra nada.</p>
+  {% if c.status in ["ready_for_complete", "requires_escalation"] %}
+  <form method="post" class="decision">
+    <button name="decision" value="aprobar" type="submit">Aprobar compra</button>
+    <button name="decision" value="rechazar" type="submit" class="secundario">Rechazar</button>
+  </form>
+  {% endif %}
+  <p class="id">Sesión <code>{{ c.id }}</code></p>
+</article>
+{% endblock %}

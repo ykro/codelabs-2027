@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}Pedido recibido · {{ TIENDA.nombre }}{% endblock %}
+{% block contenido %}
+<article class="texto">
+  <h1>¡Gracias{{ ', ' ~ pedido.nombre if pedido.nombre }}!</h1>
+  <p>Recibimos tu pedido de {{ pedido.cantidad }} × {{ pedido.p.nombre }} ({{ pedido.v.presentacion }}).</p>
+  <p>Te escribimos por WhatsApp para coordinar la entrega. Pagas al recibir.</p>
+  <p><a href="/">Seguir comprando</a></p>
+</article>
+{% endblock %}

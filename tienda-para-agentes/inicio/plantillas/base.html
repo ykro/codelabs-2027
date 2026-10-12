@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{% block titulo %}{{ TIENDA.nombre }}{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/estilo.css">
+{% block head %}{% endblock %}
+</head>
+<body>
+<header class="cabecera">
+  <a class="marca" href="/"><span class="cometa" aria-hidden="true"></span>{{ TIENDA.nombre }}</a>
+  <nav><a href="/">Café</a><a href="/envios">Envíos</a></nav>
+</header>
+<main>
+{% block contenido %}{% endblock %}
+</main>
+<footer class="pie">Tienda ficticia para el codelab «Haz tu tienda legible para agentes». Precios en quetzales.</footer>
+</body>
+</html>

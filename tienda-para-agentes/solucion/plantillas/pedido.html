@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titulo %}{{ c.order.label }} · {{ TIENDA.nombre }}{% endblock %}
+{% block contenido %}
+<article class="texto">
+  <h1>{{ c.order.label }}</h1>
+  {% for li in c.line_items %}<p>{{ li.quantity }} × {{ li.item.title }}</p>{% endfor %}
+  <p>Total: <strong>{{ quetzales(c.totals[-1].amount) }}</strong>, pago contra entrega.</p>
+</article>
+{% endblock %}

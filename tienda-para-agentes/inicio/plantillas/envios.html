@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block titulo %}Envíos · {{ TIENDA.nombre }}{% endblock %}
+{% block contenido %}
+<article class="texto">
+  <h1>Envíos</h1>
+  <h2>{{ envios.estandar.titulo }} · {{ quetzales(envios.estandar.precio) }}</h2>
+  <p>Preparamos tu pedido en 0 a 1 día hábil y la mensajería tarda 2 días hábiles ({{ envios.estandar.dias }}). Si pides hoy, llega {{ estandar }}.</p>
+  <h2>{{ envios.expres.titulo }} · {{ quetzales(envios.expres.precio) }}</h2>
+  <p>Al día siguiente, de {{ envios.expres.dias }}. Si pides hoy, llega {{ expres }}.</p>
+  <p>Pago contra entrega en efectivo o tarjeta. Coordinamos la dirección por WhatsApp.</p>
+</article>
+{% endblock %}

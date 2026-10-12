@@ -1,0 +1,22 @@
+[project]
+name = "tienda-barrilete"
+version = "1.0.0"
+description = "Tienda de café legible para agentes: JSON-LD, feed, perfil UCP y checkout (codelab)."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "watchfiles>=1.0",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.9",
+    "httpx>=0.27",
+    "cryptography>=43",
+    "google-genai>=1.40",
+    "pydantic>=2.7",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.uv]
+package = false
