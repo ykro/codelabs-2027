@@ -3,14 +3,14 @@
 // gemini.js (paso 6) y restaurar.js (paso 7).
 import { borrarModelo, cargarGemma, estadoDescarga } from './modelo.js';
 import { armarMapa, buscarDatos } from './anonimizador.js';
-import { buscarFugas, cubrirFugas, revisarAMano } from './detector.js';
+import { buscarFugas, cubrirFugas, pareceInyeccion, revisarAMano } from './detector.js';
 import { armarSolicitud, preguntarAGemini } from './gemini.js';
 import { restaurar } from './restaurar.js';
 import { EJEMPLOS } from './ejemplos.js';
 
 const $ = (id) => document.getElementById(id);
 const MODELO_GEMINI = 'gemini-3.8-flash';
-const estado = { engine: null, limpio: '', mapa: {}, revision: null, ocupado: false };
+const estado = { engine: null, original: '', limpio: '', mapa: {}, revision: null, avisos: [], tiempoGemma: '', ocupado: false };
 
 // ---------- utilidades de interfaz ----------
 const segundos = (desde) => ((performance.now() - desde) / 1000).toFixed(1);
@@ -35,7 +35,9 @@ function mensajeError(error) {
 function actualizarBotones() {
   const llave = $('llave').value.trim();
   $('proteger').disabled = !estado.engine || estado.ocupado;
-  $('enviar').disabled = !estado.revision?.ok || !llave || estado.ocupado;
+  // Con avisos (Gemma no encontró nada, palabras dudosas, posible inyección) hay que confirmar a mano.
+  const falta = estado.avisos.length > 0 && !$('confirmar').checked;
+  $('enviar').disabled = !estado.revision?.ok || falta || !llave || estado.ocupado;
   $('enviar').title = !llave ? 'Escribe tu llave de AI Studio' : '';
 }
 
@@ -43,6 +45,9 @@ function limpiarEtapas() {
   estado.limpio = '';
   estado.mapa = {};
   estado.revision = null;
+  estado.avisos = [];
+  $('confirmar').checked = false;
+  $('confirmar-caja').hidden = true;
   $('mapa').className = 'vacio';
   $('mapa').textContent = 'Aquí verás lo que Gemma encontró.';
   $('veredicto').replaceChildren();
@@ -142,7 +147,7 @@ async function prepararGemma(archivo) {
 }
 
 // ---------- 2. proteger (todo en tu dispositivo) ----------
-function mostrarMapa(mapa, ignorados, tiempo) {
+function mostrarMapa(mapa, ignorados, tiempo, cubiertos = 0) {
   const filas = Object.entries(mapa)
     .map(([marcador, valor]) => `<tr><td><span class="marcador">${escapar(marcador)}</span></td><td>${escapar(valor)}</td></tr>`)
     .join('');
@@ -152,6 +157,7 @@ function mostrarMapa(mapa, ignorados, tiempo) {
     ? `<table class="tabla"><thead><tr><th>Marcador</th><th>Dato real</th></tr></thead><tbody>${filas}</tbody></table>`
     : '<p class="aviso">Gemma no encontró datos personales.</p>';
   const pie = [`Gemma tardó ${tiempo} s. Este mapa nunca sale de tu dispositivo.`];
+  if (cubiertos) pie.push(`El detector cubrió ${cubiertos} dato(s) más.`);
   if (ignorados.length) pie.push(`Ignorados (no están en el texto): ${ignorados.join(', ')}.`);
   contenedor.insertAdjacentHTML('beforeend', `<p class="nota">${escapar(pie.join(' '))}</p>`);
 }
@@ -160,22 +166,36 @@ function mostrarRevision() {
   const { revision, limpio } = estado;
   $('limpio').className = 'texto';
   $('limpio').innerHTML = conMarcadores(limpio);
+  const encontradas = new Set(revision.fugas.map((f) => f.valor));
+  const dudosas = revisarAMano(limpio).filter((p) => !encontradas.has(p));
+  // Lo que el código no puede decidir solo: la persona tiene que mirarlo y confirmar.
+  estado.avisos = [];
+  if (!Object.keys(estado.mapa).length) estado.avisos.push('Gemma no encontró ningún dato personal.');
+  if (pareceInyeccion(estado.original)) estado.avisos.push('El texto parece traer instrucciones para el modelo (posible inyección): Gemma pudo obedecerlas.');
+  if (dudosas.length) estado.avisos.push(`Palabras que podrían ser nombres u otros datos: ${dudosas.join(', ')}.`);
   const veredicto = $('veredicto');
-  if (revision.ok) {
-    veredicto.innerHTML = '<div class="veredicto bien"><strong>El detector aprobó el texto</strong>No quedó ningún dato personal que el código pueda reconocer. Puede salir.</div>';
-  } else {
+  const avisos = `<ul>${estado.avisos.map((a) => `<li>${escapar(a)}</li>`).join('')}</ul>`;
+  if (!revision.ok) {
     const lista = revision.fugas
       .map((f) => `<li><b>${escapar(f.tipo)}</b>: ${escapar(f.valor)} <span class="nota">(${escapar(f.motivo)})</span></li>`)
       .join('');
     veredicto.innerHTML = `<div class="veredicto mal"><strong>Bloqueado: no se enviará nada</strong>El detector encontró ${revision.fugas.length} dato(s) que Gemma dejó pasar:<ul>${lista}</ul><p class="nota">Esta lista se queda en tu dispositivo.</p></div>`;
+  } else if (estado.avisos.length) {
+    veredicto.innerHTML = `<div class="veredicto duda"><strong>Revisa antes de enviar</strong>El detector no encontró formatos que reconozca, pero:${avisos}</div>`;
+  } else {
+    veredicto.innerHTML = '<div class="veredicto bien"><strong>El detector aprobó el texto</strong>No quedó ningún dato que el código pueda reconocer. Revisa el texto limpio antes de enviarlo.</div>';
   }
   $('cubrir').hidden = revision.ok;
-  const encontradas = new Set(revision.fugas.map((f) => f.valor));
-  const dudosas = revisarAMano(limpio).filter((p) => !encontradas.has(p));
-  $('revisar').textContent = dudosas.length
-    ? `Revisa a mano antes de enviar (palabras con mayúscula que podrían ser nombres): ${dudosas.join(', ')}.`
-    : '';
+  $('revisar').textContent = !revision.ok && dudosas.length ? `Revisa también: ${dudosas.join(', ')}.` : '';
+  $('confirmar').checked = false;
+  $('confirmar-caja').hidden = !(revision.ok && estado.avisos.length);
   actualizarBotones();
+}
+
+function mensajeEstado() {
+  if (!estado.revision.ok) return 'El detector bloqueó el envío. Puedes cubrir lo que encontró o editar tu texto.';
+  if (estado.avisos.length) return 'El detector no bloqueó, pero hay avisos: revisa el texto limpio y confirma antes de enviar.';
+  return 'Listo. Revisa el texto limpio y envíalo a Gemini.';
 }
 
 async function proteger() {
@@ -189,6 +209,8 @@ async function proteger() {
   try {
     const datos = await buscarDatos(estado.engine, texto);
     const tiempo = segundos(inicio);
+    estado.original = texto;
+    estado.tiempoGemma = tiempo;
     const { texto: limpio, mapa, ignorados } = armarMapa(texto, datos);
     estado.limpio = limpio;
     estado.mapa = mapa;
@@ -198,9 +220,7 @@ async function proteger() {
     estado.revision = buscarFugas(limpio, mapa);
     mostrarRevision();
     document.querySelector('.etapas').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    $('estado-proteger').textContent = estado.revision.ok
-      ? 'Listo. Revisa el texto limpio y envíalo a Gemini.'
-      : 'El detector bloqueó el envío. Puedes cubrir lo que encontró o editar tu texto.';
+    $('estado-proteger').textContent = mensajeEstado();
   } catch (error) {
     $('estado-proteger').textContent = `No se pudo proteger el texto: ${mensajeError(error)}`;
     $('veredicto').innerHTML = `<div class="veredicto mal"><strong>No se enviará nada</strong>${escapar(mensajeError(error))}</div>`;
@@ -213,10 +233,11 @@ async function proteger() {
 function cubrir() {
   const { texto, mapa } = cubrirFugas(estado.limpio, estado.mapa, estado.revision.fugas);
   estado.limpio = texto;
+  mostrarMapa(mapa, [], estado.tiempoGemma, Object.keys(mapa).length - Object.keys(estado.mapa).length);
   estado.mapa = mapa;
-  mostrarMapa(mapa, [], '—');
   estado.revision = buscarFugas(texto, mapa);
   mostrarRevision();
+  $('estado-proteger').textContent = mensajeEstado();
 }
 
 // ---------- 3. enviar y restaurar ----------
@@ -290,6 +311,7 @@ function iniciar() {
     if (!estado.engine) $('cargar').textContent = 'Descargar y cargar Gemma';
   });
   $('proteger').addEventListener('click', proteger);
+  $('confirmar').addEventListener('change', actualizarBotones);
   $('cubrir').addEventListener('click', cubrir);
   $('enviar').addEventListener('click', enviar);
   $('copiar').addEventListener('click', async () => {

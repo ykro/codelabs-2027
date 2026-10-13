@@ -15,3 +15,7 @@ export function cubrirFugas() {
 export function revisarAMano() {
   return [];
 }
+
+export function pareceInyeccion() {
+  return false;
+}

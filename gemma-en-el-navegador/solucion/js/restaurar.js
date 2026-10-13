@@ -1,6 +1,6 @@
 // archivo: js/restaurar.js
 // La respuesta de la nube vuelve con marcadores; aquí, en tu dispositivo,
-// se cambian por los datos reales. Gemini nunca los vio.
+// se cambian por los datos reales. Gemini nunca vio los datos del mapa.
 export function restaurar(texto, mapa) {
   let resultado = texto;
   for (const [marcador, valor] of Object.entries(mapa)) {

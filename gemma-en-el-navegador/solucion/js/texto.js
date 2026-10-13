@@ -23,6 +23,21 @@ export function posiciones(texto, valor) {
   return [...plano(texto).matchAll(regex)].map((m) => [m.index, m.index + m[0].length]);
 }
 
+// Las formas exactas en que `valor` aparece en el texto: «Pérez» y «PEREZ» son dos formas.
+// Sirve para restaurar el dato tal como lo escribió la persona.
+export function formas(texto, valor) {
+  return [...new Set(posiciones(texto, valor).map(([inicio, fin]) => texto.slice(inicio, fin)))];
+}
+
+// Reemplaza solo las apariciones exactas de `forma` (mismas mayúsculas y tildes) como palabra completa.
+export function reemplazarExacto(texto, forma, marcador) {
+  let resultado = texto;
+  for (const [inicio, fin] of posiciones(texto, forma).reverse()) {
+    if (texto.slice(inicio, fin) === forma) resultado = resultado.slice(0, inicio) + marcador + resultado.slice(fin);
+  }
+  return resultado;
+}
+
 export function contiene(texto, valor) {
   return posiciones(texto, valor).length > 0;
 }

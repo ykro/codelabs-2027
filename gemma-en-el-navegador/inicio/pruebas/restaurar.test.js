@@ -19,3 +19,11 @@ test('restaurar devuelve los datos y avisa de marcadores inventados', () => {
   assert.equal(texto, 'Estimada Ana Lucía Morales: su reembolso de Q650 y [MONTO_7].');
   assert.deepEqual(sinRestaurar, ['[MONTO_7]']);
 });
+
+test('al cubrir y restaurar, el dato vuelve con las mismas mayúsculas', () => {
+  const mapa = { '[NOMBRE_1]': 'Rodrigo Alvarado' };
+  const texto = 'Soy [NOMBRE_1], mi correo es rodrigo.alvarado arroba gmail punto com.';
+  const cubierto = cubrirFugas(texto, mapa, buscarFugas(texto, mapa).fugas);
+  assert.equal(buscarFugas(cubierto.texto, cubierto.mapa).ok, true);
+  assert.equal(restaurar(cubierto.texto, cubierto.mapa).texto, 'Soy Rodrigo Alvarado, mi correo es rodrigo.alvarado arroba gmail punto com.');
+});

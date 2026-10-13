@@ -136,6 +136,9 @@ div.vacio { padding: 12px; border-radius: 8px; background: var(--fondo); font-si
 .veredicto strong { display: block; font-size: 16px; }
 .veredicto.bien { background: var(--local-fondo); color: var(--local); }
 .veredicto.mal { background: var(--alerta-fondo); color: var(--alerta); }
+.veredicto.duda { background: var(--aviso-fondo); color: var(--aviso); }
+.confirmar { display: flex; gap: 10px; align-items: flex-start; margin: 12px 0 0; padding: 10px 12px; min-height: 44px; border: 1px solid var(--aviso); border-radius: 8px; background: var(--aviso-fondo); font-weight: 600; cursor: pointer; }
+.confirmar input { width: 22px; min-height: 22px; height: 22px; margin: 2px 0 0; flex: none; accent-color: var(--nube); }
 .veredicto ul { margin: 8px 0 0; padding-left: 20px; color: var(--tinta); }
 .veredicto .nota { color: var(--alerta); }
 

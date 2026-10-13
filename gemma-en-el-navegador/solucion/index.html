@@ -77,6 +77,10 @@
         <div id="veredicto" aria-live="polite"></div>
         <pre id="limpio" class="texto vacio">Aquí verás el único texto que puede salir.</pre>
         <p id="revisar" class="nota"></p>
+        <label id="confirmar-caja" class="confirmar" hidden>
+          <input id="confirmar" type="checkbox">
+          <span>Revisé el texto limpio y no lleva datos personales: quiero enviarlo.</span>
+        </label>
         <div class="acciones">
           <button id="cubrir" class="boton" type="button" hidden>Cubrir lo que encontró el detector</button>
           <button id="enviar" class="primario" type="button" disabled>Enviar a Gemini</button>
