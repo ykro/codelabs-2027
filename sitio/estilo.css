@@ -152,8 +152,13 @@ tr:last-child td { border-bottom: 0; }
   .bloque { margin-left: -16px; margin-right: -16px; border-radius: 0; border-left: 0; border-right: 0; }
   .aviso .bloque { margin-left: 0; margin-right: 0; border-radius: var(--r); border: 1px solid var(--linea); }
   .bloque pre { font-size: 12.5px; }
-  .tabla table { min-width: 560px; }
-  .tabla td code { overflow-wrap: normal; }
+  .tabla { border: 0; overflow: visible; }
+  .tabla table, .tabla tbody, .tabla tr, .tabla td { display: block; width: 100%; }
+  .tabla thead { display: none; }
+  .tabla tr { background: #fff; border: 1px solid var(--linea); border-radius: var(--r); margin: 0 16px 10px; width: auto; padding: 4px 0; }
+  .tabla td { border: 0; padding: 6px 14px; }
+  .tabla td[data-col]:not([data-col=""])::before { content: attr(data-col); display: block; font-size: 12px; font-weight: 600; color: var(--suave); }
+  .tabla td:first-child { font-weight: 600; }
   .tabla { margin-left: -16px; margin-right: -16px; border-radius: 0; border-left: 0; border-right: 0; }
   .barra-titulo { display: none; }
   .pie .btn { flex: 1; padding: 0 12px; }

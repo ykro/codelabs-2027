@@ -6,8 +6,8 @@ Diferencias con lo que construye el alumno:
 - Límite de mensajes por visitante y tope diario. Los datos se borran cada día.
 """
 
+import json
 import os
-import re
 import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -28,11 +28,32 @@ LIMITE_VISITANTE = int(os.environ.get("LIMITE_VISITANTE", "15"))  # mensajes por
 TOPE_DIARIO = int(os.environ.get("TOPE_DIARIO", "200"))  # mensajes de todos al día
 MAX_CITAS = 300
 CHAT = (Path(__file__).parent / "chat.html").read_text(encoding="utf-8")
+AJENA = ("<!doctype html><html lang='es'><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>"
+         "<title>Cita no disponible</title><body style='font:17px/1.5 system-ui,sans-serif;background:#F8F7F4;color:#1D1D1B;padding:24px;max-width:560px;margin:auto'>"
+         "<h1 style='font-size:24px'>Esta cita no está disponible aquí</h1>"
+         "<p>Solo quien pidió la cita puede verla y aprobarla, desde el mismo navegador donde chateó con el agente. "
+         "Si la pediste tú, abre el enlace en ese navegador.</p><p><a href='/'>Volver al chat</a></p></body></html>")
 
 gemini = genai.Client()  # GOOGLE_GENAI_USE_VERTEXAI, GOOGLE_CLOUD_PROJECT y GOOGLE_CLOUD_LOCATION
 estado = {"dia": agenda.hoy(), "total": 0, "por_visitante": {}, "propias": {}}
 COOKIE = "tv_visitante"
-ENLACE = re.compile(r"/aprobar/(TV-[0-9A-F]+)")
+
+
+class RegistraDueno:
+    """Envuelve el cliente MCP: anota como dueño de una cita a quien la pidió (desde el resultado de la
+    herramienta, no desde el texto del modelo, que un visitante podría hacer repetir el enlace de otro)."""
+
+    def __init__(self, mcp, propias: set[str]):
+        self.mcp, self.propias = mcp, propias
+
+    async def call_tool(self, nombre, argumentos):
+        resultado = await self.mcp.call_tool(nombre, argumentos)
+        if nombre == "solicitar_cita" and not getattr(resultado, "is_error", False):
+            try:
+                self.propias.add(json.loads(agente.texto_de(resultado))["id"])
+            except (ValueError, KeyError, TypeError):
+                pass
+        return resultado
 
 
 def nuevo_dia() -> None:
@@ -76,16 +97,15 @@ async def api_chat(request: Request) -> JSONResponse:
     estado["por_visitante"][quien] = usados + 1
     estado["total"] += 1
     pasos: list[str] = []
+    token = request.cookies.get(COOKIE) or ""
+    propias = estado["propias"].setdefault(token, set()) if token else set()
     try:
         async with Client(servidor.mcp) as mcp:
             herramientas = (await mcp.list_tools()).tools
             respuesta, anterior, llamadas = await agente.turno(
-                gemini, mcp, herramientas, mensaje, anterior, avisar=pasos.append)
+                gemini, RegistraDueno(mcp, propias), herramientas, mensaje, anterior, avisar=pasos.append)
     except Exception:  # noqa: BLE001 — al visitante no le mostramos detalles internos
         return JSONResponse({"error": "El agente no pudo responder. Intenta de nuevo."}, status_code=502)
-    token = request.cookies.get(COOKIE)
-    if token:  # quien recibe el enlace de aprobación es dueño de esa cita
-        estado["propias"].setdefault(token, set()).update(ENLACE.findall(respuesta))
     return JSONResponse({"respuesta": respuesta, "anterior": anterior, "pasos": pasos, "llamadas": llamadas,
                          "restantes": LIMITE_VISITANTE - usados - 1})
 
@@ -110,7 +130,7 @@ async def guardia(scope, receive, send):
                 await HTMLResponse(paginas.agenda(lista))(scope, receive, send)
                 return
             if ruta.removeprefix("/aprobar/") not in propias:
-                await HTMLResponse(paginas.no_existe(ruta.removeprefix("/aprobar/")), status_code=404)(scope, receive, send)
+                await HTMLResponse(AJENA, status_code=404)(scope, receive, send)
                 return
     await app_mcp(scope, receive, send)
 

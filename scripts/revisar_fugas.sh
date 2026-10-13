@@ -13,6 +13,9 @@ fallas=0
 locales=()
 for a in "$@"; do [[ "$a" == http* ]] || locales+=("$a"); done
 [[ ${#locales[@]} -eq 0 ]] && locales=(.)
+for a in "${locales[@]}"; do
+  [[ -e "$a" ]] || { echo "✗ No existe: $a"; exit 2; }
+done
 
 if grep -rEn "${EXCLUIR[@]}" "$PATRON" "${locales[@]}"; then
   echo "✗ Hay datos que no deben publicarse en los archivos (arriba)."; fallas=1

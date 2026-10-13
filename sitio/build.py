@@ -132,10 +132,22 @@ def convertir(md: str) -> str:
     return salida
 
 
+def etiquetar_tabla(m: re.Match) -> str:
+    """Envuelve la tabla y pone a cada celda el nombre de su columna, para apilarla como tarjetas en el teléfono."""
+    tabla = m.group(0)
+    columnas = [re.sub(r"<[^>]+>", "", h).strip() for h in re.findall(r"<th[^>]*>(.*?)</th>", tabla, re.S)]
+
+    def fila(f: re.Match) -> str:
+        celdas = iter(columnas)
+        return re.sub(r"<td([^>]*)>", lambda c: f'<td{c.group(1)} data-col="{html.escape(next(celdas, ""), quote=True)}">', f.group(0))
+
+    tabla = re.sub(r"<tr>.*?</tr>", fila, tabla, flags=re.S)
+    return f'<div class="tabla">{tabla}</div>'
+
+
 def convertir_simple(md: str) -> str:
     out = markdown.markdown(md, extensions=["tables", "sane_lists", "attr_list"], output_format="html")
-    out = re.sub(r"<table>", '<div class="tabla"><table>', out)
-    out = re.sub(r"</table>", "</table></div>", out)
+    out = re.sub(r"<table>.*?</table>", etiquetar_tabla, out, flags=re.S)
     out = re.sub(r'<img ([^>]*)>', r'<img loading="lazy" \1>', out)
     out = re.sub(r'<a href="(https?://[^"]+)"', r'<a target="_blank" rel="noopener" href="\1"', out)
     return out
