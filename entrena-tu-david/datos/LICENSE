@@ -1,0 +1,7 @@
+Los archivos train.jsonl y test.jsonl de esta carpeta se publican bajo la licencia
+Creative Commons Atribución 4.0 Internacional (CC BY 4.0).
+https://creativecommons.org/licenses/by/4.0/legalcode.es
+
+Atribución sugerida: «Codelabs 2027 — Entrena a tu propio David» (github.com/ykro/codelabs-2027).
+Los datos son sintéticos (generados con Gemini y validados por reglas; ver DATOS.md).
+El código de esta carpeta (generar_datos.py) sigue la licencia del repositorio.

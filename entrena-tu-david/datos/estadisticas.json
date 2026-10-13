@@ -1,0 +1,26 @@
+{
+  "modelo": "gemini-3.8-flash",
+  "fecha": "2026-10-12",
+  "train": {
+    "solicitados": 1305,
+    "validos": 1000,
+    "rechazos": {
+      "urgencia_mezclada": 41,
+      "tipo": 38,
+      "numero_extra": 1,
+      "urgencia": 1,
+      "cantidad": 1,
+      "producto": 3
+    }
+  },
+  "test": {
+    "solicitados": 200,
+    "validos": 150,
+    "rechazos": {
+      "numero_extra": 1,
+      "urgencia_mezclada": 3,
+      "tipo": 5,
+      "producto": 2
+    }
+  }
+}
