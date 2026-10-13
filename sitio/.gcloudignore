@@ -1,7 +1,7 @@
-.gcloudignore
-build.py
-plantilla.html
-indice.html
-estilo.css
-app.js
-capturas/
+/.gcloudignore
+/build.py
+/plantilla.html
+/indice.html
+/estilo.css
+/app.js
+/capturas/

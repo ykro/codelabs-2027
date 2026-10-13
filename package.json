@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "sitio": "uv run sitio/build.py --check",
-    "revisar-sitio": "node scripts/revisar_sitio.mjs"
+    "revisar-sitio": "node scripts/revisar_sitio.mjs",
+    "revisar-publicado": "node scripts/revisar_publicado.mjs"
   },
   "devDependencies": {
     "playwright": "1.63.0"

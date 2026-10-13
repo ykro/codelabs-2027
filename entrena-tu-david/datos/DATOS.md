@@ -84,3 +84,4 @@ Necesitas un proyecto de Google Cloud con Vertex AI y `gcloud auth application-d
 - Son mensajes sintéticos: Gemini imita el habla guatemalteca, pero no son conversaciones de clientes. Antes de usar un modelo así en una tienda, mídelo con mensajes de tus clientes.
 - Cada mensaje pide un solo producto. Pedidos con varios productos quedan fuera del esquema.
 - El test sale del mismo proceso que el train. Mide si el modelo aprendió las reglas de la tienda, no qué tan bien se las arregla con mensajes muy distintos.
+- La regla de coherencia revisa el tipo y la categoría, no cada producto. Quedan unos pocos mensajes raros, por ejemplo una «fuga» junto a herramientas de jardín (9 de 1000 en train). Son ruido pequeño; si amplías el dataset, agrega una regla por producto.

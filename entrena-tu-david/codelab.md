@@ -53,7 +53,7 @@ Opcional:
 - **Para correr tu modelo en tu laptop (paso 11):** [Ollama](https://ollama.com/download) instalado, Python 3, una terminal y unos 18 GB libres en disco.
 
 :::info Cómo se probó este taller
-El notebook se ejecutó completo, celda por celda y tal como está aquí, con la imagen oficial del entorno de Colab en una máquina de Google Cloud parecida a Colab gratis: GPU **Tesla T4** de 15 GB, 2 vCPU y 12 GB de RAM. Las cifras y los tiempos del texto salen de esa corrida. La celda opcional de Gemini se corrió aparte, con una llave de AI Studio, sobre los mismos datos. El paso 11 en la laptop se probó en una Mac con chip M1.
+El notebook se ejecutó completo, celda por celda y tal como está aquí (las dos celdas del paso 11 en una sesión nueva, sin el modelo en memoria), con la imagen oficial del entorno de Colab en una máquina de Google Cloud parecida a Colab gratis: GPU **Tesla T4** de 15 GB, 2 vCPU y 12 GB de RAM. Las cifras y los tiempos del texto salen de esa corrida. La celda opcional de Gemini se corrió aparte, con una llave de AI Studio, sobre los mismos datos. El paso 11 en la laptop se probó en una Mac con chip M1.
 :::
 
 :::check Listo para empezar
@@ -773,7 +773,7 @@ Desde el teléfono creas un ticket y ves las dos tarjetas.
 
 ## Llévalo a tu laptop con Ollama (opcional) | 10
 
-Ollama corre modelos en formato GGUF. Lo directo sería que Unsloth junte el adaptador con el modelo y lo exporte (`model.save_pretrained_gguf`), pero eso **no cabe en Colab gratis**: en la prueba, con 12 GB de RAM, el conversor llegó a 11.8 GB y el sistema lo cerró, también al intentarlo en una sesión nueva. La ruta que sí cabe es exportar solo el adaptador (50 MB) en Colab y juntarlo con el modelo base en tu laptop.
+Ollama corre modelos en formato GGUF. Lo directo sería que Unsloth junte el adaptador con el modelo y lo exporte (`model.save_pretrained_gguf`), pero eso **no cabe en Colab gratis**: en la prueba, con 12 GB de RAM, el conversor llegó a 11.8 GB y el sistema lo cerró, también al intentarlo en una sesión nueva. La ruta que sí cabe es exportar solo el adaptador (50 MB) en Colab y juntarlo con el modelo base en tu laptop. Estas celdas solo leen la carpeta `david_lora`: si Colab se queda sin memoria, reinicia la sesión (**Entorno de ejecución → Reiniciar sesión**) y corre solo este paso, como se hizo en la prueba.
 
 En Colab, baja la versión de llama.cpp con la que se probó y convierte el adaptador:
 
@@ -794,9 +794,11 @@ INFO:lora-to-gguf:Model successfully exported to david-lora.gguf
 
 En la prueba esa conversión usó 1.2 GB de RAM y tardó medio minuto. Descarga `david-lora.gguf` desde el panel de archivos de Colab (ícono de carpeta → clic derecho en el archivo → **Descargar**).
 
-En tu laptop, en una carpeta nueva con `david-lora.gguf`, `Modelfile` y `ticket.py` (los dos últimos están en `entrena-tu-david/solucion/` del repo), baja llama.cpp y el modelo base en GGUF que publica Unsloth (4.7 GB), y junta los dos:
+En tu laptop, crea una carpeta nueva, pon ahí `david-lora.gguf`, baja `Modelfile` y `ticket.py` del repo, llama.cpp y el modelo base en GGUF que publica Unsloth (5 GB), y junta los dos:
 
 ```bash
+curl -LO https://raw.githubusercontent.com/ykro/codelabs-2027/main/entrena-tu-david/solucion/Modelfile
+curl -LO https://raw.githubusercontent.com/ykro/codelabs-2027/main/entrena-tu-david/solucion/ticket.py
 curl -L -o llama.tar.gz https://github.com/ggml-org/llama.cpp/releases/download/b11541/llama-b11541-bin-macos-arm64.tar.gz
 tar xzf llama.tar.gz
 curl -L -o gemma-4-E2B-it-Q8_0.gguf https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-Q8_0.gguf
