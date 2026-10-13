@@ -65,6 +65,10 @@ def test_reglas_rechazan_mensajes_malos():
     assert any(f.startswith("urgencia_mezclada") for f in gen.validar("necesito 10 de cemento para hoy o para el sabado", t, p))
     assert any(f.startswith("otro_producto") for f in gen.validar("necesito 10 de cemento y una pala para hoy", t, p))
     assert "dinero_sin_monto" in gen.validar("necesito 10 de cemento para hoy, tengo pisto", t, p)
+    # coherencia: cotizar en un pedido, o una fuga con cemento, no tienen sentido
+    assert any(f.startswith("incoherente") for f in gen.validar("quiero 10 de cemento para hoy, solo estoy cotizando", t, p))
+    assert any(f.startswith("incoherente") for f in gen.validar("necesito 10 de cemento para hoy, tengo una fuga", t, p))
+    assert "tengo una fuga" not in gen.senales_posibles(t) and "solo estoy cotizando" not in gen.senales_posibles({**t, "urgencia": "baja"})
 
 
 # ------------------------------------------------------------------ notebook ↔ codelab

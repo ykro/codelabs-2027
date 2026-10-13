@@ -13,7 +13,7 @@ MODELO = "david-ferreteria"
 PROMPT = """Eres el asistente de Ferretería La Ceiba, en Guatemala. Convierte el mensaje del cliente en un ticket JSON con estos campos:
 - tipo: pedido, cotizacion, reclamo o seguimiento
 - categoria: obra_gris, techos, plomeria, electricidad, pintura, herramientas o jardin
-- producto: el producto que menciona
+- producto: el nombre del producto como lo vende la tienda, en singular
 - cantidad: número entero, o null si no la dice
 - monto_q: monto en quetzales, o null si no lo dice
 - urgencia: alta, media o baja

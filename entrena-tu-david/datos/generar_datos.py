@@ -10,7 +10,7 @@ Cómo funciona (detalle en DATOS.md):
   3. Reglas en código validan cada mensaje; lo que no pasa se descarta.
   4. Train y test salen de sorteos con semillas distintas y se quitan duplicados entre ellos.
 
-    GOOGLE_CLOUD_PROJECT=<tu-proyecto> uv run datos/generar_datos.py --train 900 --test 150
+    GOOGLE_CLOUD_PROJECT=<tu-proyecto> uv run datos/generar_datos.py --train 1000 --test 150
 
 Usa Gemini en Vertex AI con las credenciales de gcloud (ADC); no lleva llaves en el código.
 """
@@ -48,7 +48,7 @@ CATALOGO = [
     ("arena de río", "obra_gris", ["arena"], (180, 250)),
     ("piedrín", "obra_gris", ["piedrin"], (250, 320)),
     ("cal hidratada", "obra_gris", ["cal"], (35, 50)),
-    ("clavos de 3 pulgadas", "obra_gris", ["clavos de 3", "clavos de tres", "clavo de 3", "clavo de tres"], (8, 12)),
+    ("clavo de 3 pulgadas", "obra_gris", ["clavos de 3", "clavos de tres", "clavo de 3", "clavo de tres"], (8, 12)),
     ("alambre de amarre", "obra_gris", ["alambre de amarre"], (9, 12)),
     ("lámina de zinc", "techos", ["lamina", "laminas"], (85, 140)),
     ("costanera", "techos", ["costanera", "costaneras"], (60, 90)),
@@ -97,6 +97,31 @@ SENALES_URGENCIA = {
     "baja": ["sin prisa", "cuando pueda", "solo estoy cotizando", "para el otro mes", "no hay apuro",
              "mas adelante", "con calma", "no es urgente"],
 }
+# Señales que solo tienen sentido con ciertos tipos o categorías (una fuga es de agua; sin luz, de electricidad).
+SOLO_SI = {
+    "solo estoy cotizando": {"tipo": ["cotizacion"]},
+    "tengo una fuga": {"categoria": ["plomeria", "jardin"]},
+    "me quede sin luz": {"categoria": ["electricidad"]},
+    "la obra esta parada": {"categoria": ["obra_gris", "techos", "herramientas", "plomeria", "electricidad"]},
+}
+# Palabras que delatan una situación y por eso deben cuadrar con el ticket.
+COHERENCIA = [
+    ("cotiz", "tipo", ["cotizacion"]),
+    ("fuga", "categoria", ["plomeria", "jardin"]),
+    ("sin luz", "categoria", ["electricidad"]),
+    ("se fue la luz", "categoria", ["electricidad"]),
+    ("gote", "categoria", ["plomeria", "jardin", "techos"]),
+]
+
+
+def senales_posibles(t: dict) -> list[str]:
+    """Frases de urgencia del nivel del ticket que tienen sentido con su tipo y categoría."""
+    def cabe(frase):
+        regla = SOLO_SI.get(frase, {})
+        return all(t[campo] in valores for campo, valores in regla.items())
+    return [f for f in SENALES_URGENCIA[t["urgencia"]] if cabe(f)]
+
+
 # Palabras que no pueden aparecer en un mensaje de otro nivel (evitan señales mezcladas).
 DIAS = ["manana", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo", "semana"]
 PROHIBIDAS = {
@@ -207,7 +232,7 @@ def sortear_pistas(rng: random.Random, t: dict) -> dict:
         "producto_como": kws,
         "cantidad_como": frase_cantidad(rng, t["cantidad"]) if t["cantidad"] is not None else None,
         "monto_como": frase_monto(rng, t["monto_q"]) if t["monto_q"] is not None else None,
-        "urgencia_como": rng.choice(SENALES_URGENCIA[t["urgencia"]]),
+        "urgencia_como": rng.choice(senales_posibles(t)),
         "estilo": rng.sample(ESTILO, k=rng.choice([1, 2, 2, 3])),
     }
 
@@ -313,6 +338,11 @@ def validar(mensaje: str, ticket: dict, pistas: dict) -> list[str]:
     for p in PROHIBIDAS[ticket["urgencia"]]:
         if contiene_raiz(sin_senal, p):
             fallas.append(f"urgencia_mezclada:{p}")
+            break
+    # coherencia: lo que dice el mensaje cuadra con el tipo y la categoría
+    for raiz, campo, valores in COHERENCIA:
+        if contiene_raiz(n, raiz) and ticket[campo] not in valores:
+            fallas.append(f"incoherente:{raiz}")
             break
     # tipo: al menos una palabra del tipo
     if not any(contiene_raiz(n, s) for s in SENALES_TIPO[ticket["tipo"]]):

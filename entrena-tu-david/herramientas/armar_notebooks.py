@@ -43,16 +43,15 @@ Sigue el codelab paso a paso: cada sección de este notebook corresponde a un pa
 """)
 
 # ---------------------------------------------------------------- Paso 3
-md("## Paso 3 · Prepara Colab e instala Unsloth")
+md("## Paso 3 · Abre el notebook e instala Unsloth")
 code("""
 !nvidia-smi --query-gpu=name,memory.total --format=csv
 """)
 code("""
 %%capture
 !pip install --no-deps unsloth==2026.10.4 unsloth_zoo==2026.10.4 bitsandbytes==0.50.2 trl==1.15.0 cut_cross_entropy==25.1.1
-!pip install sentencepiece protobuf "datasets==4.3.0" hf_transfer
+!pip install sentencepiece protobuf "datasets==4.8.5" "huggingface_hub>=1.5.0,<2.0" hf_transfer gradio==6.26.0
 !pip install --no-deps transformers==5.5.0 "tokenizers>=0.22.0,<=0.23.0" "torchao>=0.16.0"
-!pip install gradio
 """)
 code("""
 import unsloth, transformers, trl, peft, gradio
@@ -72,6 +71,13 @@ model, tokenizer = FastModel.from_pretrained(
     load_in_4bit=False,
 )
 tokenizer = get_chat_template(tokenizer, chat_template="gemma-4")
+""")
+code("""
+import torch
+
+gpu = torch.cuda.get_device_properties(0)
+print(f"GPU: {gpu.name} · memoria total: {gpu.total_memory / 1024**3:.1f} GB")
+print(f"Memoria reservada después de cargar: {torch.cuda.max_memory_reserved() / 1024**3:.1f} GB")
 """)
 
 # ---------------------------------------------------------------- Paso 5
@@ -101,7 +107,7 @@ code('''
 PROMPT = """Eres el asistente de Ferretería La Ceiba, en Guatemala. Convierte el mensaje del cliente en un ticket JSON con estos campos:
 - tipo: pedido, cotizacion, reclamo o seguimiento
 - categoria: obra_gris, techos, plomeria, electricidad, pintura, herramientas o jardin
-- producto: el producto que menciona
+- producto: el nombre del producto como lo vende la tienda, en singular
 - cantidad: número entero, o null si no la dice
 - monto_q: monto en quetzales, o null si no lo dice
 - urgencia: alta, media o baja
@@ -270,6 +276,7 @@ code('''
 FastModel.for_training(model)
 stats = trainer.train()
 print(f"Entrenamiento: {stats.metrics['train_runtime'] / 60:.1f} min")
+print(f"Pico de memoria de GPU: {torch.cuda.max_memory_reserved() / 1024**3:.1f} GB de {gpu.total_memory / 1024**3:.1f} GB")
 ''')
 
 # ---------------------------------------------------------------- Paso 9
@@ -293,30 +300,38 @@ for fila, b, d in cambios[:3]:
 code('''
 model.save_pretrained("david_lora")
 _ = tokenizer.save_pretrained("david_lora")
+!du -sh david_lora
 ''')
-md("### Opcional: compáralo con Gemini (Goliat)\nNecesitas tu llave de AI Studio guardada en los *Secretos* de Colab con el nombre `GEMINI_API_KEY`.")
+md("### Opcional: compáralo con Gemini (Goliat)\nNecesitas tu llave de AI Studio guardada en los *Secretos* de Colab con el nombre `GEMINI_API_KEY`. Sin llave, la celda solo avisa y puedes seguir.")
 code('''
+# Opcional: si no tienes llave de AI Studio, esta celda solo avisa y puedes seguir al paso 10.
 from google import genai
 from google.colab import userdata
 
-cliente = genai.Client(api_key=userdata.get("GEMINI_API_KEY"))
 MODELO_GEMINI = "gemini-3.8-flash"  # si llegas al límite del día: "gemini-3.5-flash-lite"
-INSTRUCCIONES = (PROMPT.split("\\n\\nMensaje:")[0] + "\\nVas a recibir varios mensajes numerados. "
-                 "Responde con un arreglo JSON: un ticket por mensaje, en el mismo orden.")
+try:
+    cliente = genai.Client(api_key=userdata.get("GEMINI_API_KEY"))
+except Exception:
+    cliente = None
+    print("No encontré GEMINI_API_KEY en los secretos de Colab (o no le diste acceso). Salta este paso.")
 
-respuestas_gemini = []
-for i in range(0, len(test), 25):  # 25 mensajes por solicitud: 6 solicitudes en total
-    grupo = test[i:i + 25]
-    lista = "\\n".join(f"{n}. {r['mensaje']}" for n, r in enumerate(grupo, 1))
-    r = cliente.models.generate_content(model=MODELO_GEMINI, contents=f"{INSTRUCCIONES}\\n\\nMensajes:\\n{lista}",
-                                        config={"response_mime_type": "application/json", "temperature": 0})
-    tickets = json.loads(r.text)[:len(grupo)]
-    respuestas_gemini += [json.dumps(t, ensure_ascii=False) for t in tickets] + [""] * (len(grupo) - len(tickets))
-gemini = calificar(respuestas_gemini, test)
-tabla(**{"Gemma sin ajustar": base, "Tu David": david, "Gemini (Goliat)": gemini})
+if cliente:
+    INSTRUCCIONES = (PROMPT.split("\\n\\nMensaje:")[0] + "\\nVas a recibir varios mensajes numerados. "
+                     "Responde con un arreglo JSON: un ticket por mensaje, en el mismo orden.")
+    respuestas_gemini = []
+    for i in range(0, len(test), 25):  # 25 mensajes por solicitud: 6 solicitudes en total
+        grupo = test[i:i + 25]
+        lista = "\\n".join(f"{n}. {r['mensaje']}" for n, r in enumerate(grupo, 1))
+        inicio = time.time()
+        r = cliente.models.generate_content(model=MODELO_GEMINI, contents=f"{INSTRUCCIONES}\\n\\nMensajes:\\n{lista}",
+                                            config={"response_mime_type": "application/json", "temperature": 0})
+        tickets = json.loads(r.text)[:len(grupo)]
+        respuestas_gemini += [json.dumps(t, ensure_ascii=False) for t in tickets] + [""] * (len(grupo) - len(tickets))
+        print(f"{len(respuestas_gemini)}/{len(test)} mensajes ({time.time() - inicio:.0f} s)")
+    gemini = calificar(respuestas_gemini, test)
+    display(tabla(**{"Gemma sin ajustar": base, "Tu David": david, "Gemini (Goliat)": gemini}))
 ''')
 
-# ---------------------------------------------------------------- Paso 10
 md("## Paso 10 · Pruébalo en una app")
 code('''
 import gradio as gr
@@ -376,12 +391,14 @@ app.launch(share=True, css=CSS, js=CLARO, theme=gr.themes.Default(font=["Inter",
 ''', todo="Escribe la app de Gradio (paso 10 del codelab).")
 
 # ---------------------------------------------------------------- Paso 11
-md("## Paso 11 · Llévalo a tu laptop (opcional)")
+md("## Paso 11 · Llévalo a tu laptop con Ollama (opcional)\nExporta solo el adaptador a GGUF (unos 50 MB). El modelo completo no cabe en la RAM de Colab gratis al convertirlo.")
 code('''
-_ = model.save_pretrained_gguf("david", tokenizer, quantization_method="q8_0")  # crea david/ y david_gguf/
+!git -c advice.detachedHead=false clone -q --depth 1 --branch b11541 https://github.com/ggml-org/llama.cpp
+!pip install -q --no-deps ./llama.cpp/gguf-py
 ''')
 code('''
-!ls -lh david_gguf
+!python llama.cpp/convert_lora_to_gguf.py david_lora --outfile david-lora.gguf --outtype f16 2>&1 | tail -n 2
+!ls -lh david-lora.gguf
 ''')
 
 
