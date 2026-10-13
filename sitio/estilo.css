@@ -91,7 +91,7 @@ h1 { font-size: 30px; line-height: 1.2; margin: 0 0 10px; letter-spacing: -.01em
 .bloque pre code { background: none; padding: 0; font-size: inherit; }
 .bloque-salida { background: var(--salida-fondo); }
 .bloque-salida figcaption { background: #E8E6E0; }
-.bloque-salida pre { color: #3A3935; }
+.bloque-salida pre { color: #3A3935; white-space: pre-wrap; overflow-wrap: anywhere; }
 .copiar {
   font: 600 12px Inter, system-ui, sans-serif; border: 1px solid var(--linea); background: #fff; color: var(--tinta);
   border-radius: 6px; padding: 5px 10px; cursor: pointer; min-height: 30px;

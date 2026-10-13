@@ -170,7 +170,7 @@ def ver_horarios(fecha: str) -> dict:
 
 Qué hace cada parte:
 
-- `MCPServer` crea el servidor. Las `instructions` le llegan al agente cuando se conecta. (En la versión 1 del SDK esta clase se llamaba `FastMCP`; muchos tutoriales todavía la usan.)
+- `MCPServer` crea el servidor. Las `instructions` describen el servidor: cualquier cliente MCP las recibe al conectarse y puede dárselas a su modelo. Tu agente del paso 7 usa sus propias instrucciones, pero otros clientes sí las aprovechan. (En la versión 1 del SDK esta clase se llamaba `FastMCP`; muchos tutoriales todavía la usan.)
 - `@mcp.tool` publica la función como herramienta. El docstring es la descripción que lee el modelo: escríbelo para el modelo, con formatos y unidades.
 - `CONSULTA` son las **anotaciones**: pistas para el cliente sobre qué hace la herramienta.
 
@@ -326,8 +326,12 @@ En la segunda pestaña, pide una cita a mano con el Inspector (toma la última h
 
 ```bash
 HORA=$(inspector --method tools/call --tool-name ver_horarios --tool-arg fecha=$FECHA | jq -r '.content[0].text | fromjson | .horas_libres[-1]')
-inspector --method tools/call --tool-name solicitar_cita --tool-arg servicio_id=frenos --tool-arg fecha=$FECHA --tool-arg hora=$HORA | jq -r '.content[0].text'
+SOLICITUD=$(inspector --method tools/call --tool-name solicitar_cita --tool-arg servicio_id=frenos --tool-arg fecha=$FECHA --tool-arg hora=$HORA | jq -r '.content[0].text')
+CITA=$(echo "$SOLICITUD" | jq -r .id)
+echo "$SOLICITUD"
 ```
+
+`CITA` guarda el `id` de la solicitud para usarlo más adelante.
 
 ```salida
 {
@@ -352,10 +356,8 @@ inspector --method tools/call --tool-name solicitar_cita --tool-arg servicio_id=
 Haz clic en **Aprobar cita** y revisa el estado desde el Inspector:
 
 ```bash
-inspector --method tools/call --tool-name estado_cita --tool-arg cita_id=TV-XXXXXX | jq -r '.content[0].text | fromjson | .estado'
+inspector --method tools/call --tool-name estado_cita --tool-arg cita_id=$CITA | jq -r '.content[0].text | fromjson | .estado'
 ```
-
-Cambia `TV-XXXXXX` por el `id` de tu solicitud.
 
 ```salida
 CONFIRMADA
@@ -382,7 +384,7 @@ El agente es un ciclo corto:
 Usas la [Interactions API](https://ai.google.dev/gemini-api/docs/interactions-overview) de Gemini, la forma recomendada hoy en la documentación. Guarda la conversación en el servidor de Gemini: cada llamada pasa `previous_interaction_id` y no tienes que reenviar el historial.
 
 :::info ¿Por qué no le paso el servidor MCP directo a Gemini?
-La Interactions API puede conectarse sola a un servidor MCP remoto, pero necesita una URL pública. Tu servidor vive en Cloud Shell, detrás de tu cuenta, así que el cliente MCP corre en tu código y Gemini solo decide. Además así ves cada paso y controlas cuántas llamadas haces.
+La documentación de la Interactions API anuncia soporte para servidores MCP remotos, pero hoy dice que Gemini 3 todavía no lo soporta. Aunque lo soportara, necesitaría una URL pública, y tu servidor vive en Cloud Shell, detrás de tu cuenta. Por eso el cliente MCP corre en tu código y Gemini solo decide. Así además ves cada paso y controlas cuántas llamadas haces.
 :::
 
 Abre `agente.py`:
