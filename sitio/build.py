@@ -6,6 +6,7 @@
 
     uv run sitio/build.py            # escribe sitio/dist/
     uv run sitio/build.py --check    # además falla si algo quedó mal enlazado
+    uv run sitio/build.py --excluir entrena-tu-david   # omite un taller que aún no está listo
 
 Formato de cada codelab.md:
 
@@ -191,6 +192,7 @@ def indice(talleres: list[tuple[str, dict, list[dict]]], plantilla: str) -> str:
 
 def main() -> None:
     check = "--check" in sys.argv
+    excluir = {sys.argv[i + 1] for i, a in enumerate(sys.argv[:-1]) if a == "--excluir"}
     plantilla = (RAIZ / "sitio" / "plantilla.html").read_text(encoding="utf-8")
     plantilla_indice = (RAIZ / "sitio" / "indice.html").read_text(encoding="utf-8")
     estilos_codigo = HtmlFormatter(style="friendly").get_style_defs(".hl")
@@ -204,7 +206,7 @@ def main() -> None:
     errores = []
     for slug in TALLERES:
         md_path = RAIZ / slug / "codelab.md"
-        if not md_path.exists():
+        if not md_path.exists() or slug in excluir:
             continue
         meta, pasos = leer(md_path)
         salida = pagina(slug, meta, pasos, plantilla)
