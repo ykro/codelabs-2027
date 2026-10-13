@@ -7,7 +7,7 @@
   {% if c.status == "completed" %}
     <p class="sello ok">Compra aprobada</p>
     <h1>{{ c.order.label }} confirmado</h1>
-    <p>El agente ya ve la sesión como <code>completed</code>. Te escribimos por WhatsApp para coordinar la entrega.</p>
+    <p>El agente ya ve la sesión como <code>completed</code>. Es una tienda de práctica: no se envía ni se cobra nada.</p>
   {% elif c.status == "canceled" %}
     <p class="sello no">Compra rechazada</p>
     <h1>No se hizo ningún pedido</h1>

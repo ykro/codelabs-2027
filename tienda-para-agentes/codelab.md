@@ -16,7 +16,7 @@ Partes de la **Tostaduría Barrilete**, una tienda ficticia de café de Guatemal
 
 El agente descubre tu tienda, lee el catálogo, arma la compra y se detiene antes de pagar. Tú la apruebas desde una página de la tienda.
 
-![La auditoría de la tienda terminada: 8 de 8 puntos](assets/auditoria-8-de-8.png)
+![La auditoría de la tienda terminada: 8 de 8 puntos](assets/auditoria-telefono.png)
 
 ![La página de aprobación en el teléfono](assets/aprobar-telefono.png)
 
@@ -26,7 +26,7 @@ Qué vas a aprender:
 
 - Publicar productos, variantes, precios, disponibilidad y tiempos de entrega en JSON-LD de schema.org y en un feed de productos.
 - Publicar el perfil de comercio UCP en `/.well-known/ucp` (versión `2026-08-25` de la especificación).
-- Abrir una sesión de checkout UCP (`dev.ucp.shopping.checkout`) que el agente puede crear y cambiar, pero no cerrar.
+- Abrir una sesión de checkout UCP (`dev.ucp.shopping.checkout`) que el agente puede crear, cambiar o cancelar, pero no completar.
 - Firmar cada checkout (extensión AP2 Mandates) y dejar la última palabra a la persona.
 
 :::check Listo si…
@@ -658,6 +658,9 @@ uv run auditar.py http://localhost:8080 | grep -E "^\[|Puntaje"
 Puntaje: 7/8
 ```
 
+Tu `id` de sesión es distinto: lo genera la tienda al azar en cada checkout. Lo mismo pasa con la firma del paso siguiente.
+
+
 :::check Listo si…
 La sesión responde `"status": "ready_for_complete"` con `"total": 9800` y el auditor dice `Puntaje: 7/8`.
 :::
@@ -668,7 +671,7 @@ Falta un punto: que la tienda pueda **probar** qué aprobó la persona. Lo resue
 
 - La tienda firma cada checkout que responde, en `ap2.merchant_authorization`. Es una firma ES256 sobre el checkout en JSON canónico ([RFC 8785](https://www.rfc-editor.org/rfc/rfc8785)), sin el campo `ap2`. Si alguien cambia un precio en el camino, la firma ya no coincide.
 - El agente verifica esa firma con la llave pública que la tienda publica en `keys` del perfil, antes de mostrarle el checkout a la persona.
-- Para completar una compra por API, la tienda exige un **mandato**: un documento firmado por una plataforma de confianza en nombre de la persona, que incluye el checkout firmado. Sin mandato, la sesión pasa a `requires_escalation` y la persona aprueba en `continue_url`.
+- Para completar una compra por API, la tienda exige un **mandato**: un documento firmado por una plataforma de confianza en nombre de la persona, que incluye el checkout firmado. Sin mandato, la especificación pide rechazar el cierre con el error `mandate_required`. Esta tienda además pasa la sesión a `requires_escalation`, para que la persona apruebe en `continue_url`.
 
 `ap2.py` ya trae la criptografía: crear la llave, firmar y verificar mandatos. Tú la conectas. En `ucp.py`, reemplaza el `TODO paso 8 (firmas_ap2)` y las tres funciones que lo siguen por:
 
@@ -768,7 +771,7 @@ def decidir(id_sesion: str, request: Request, decision: str = Form(...)):
     return RedirectResponse(f"/aprobar/{id_sesion}", status_code=303)
 ```
 
-Aprobar llama a `ucp.completar`: la tienda cierra la sesión como `completed` y crea el pedido. Rechazar la cierra como `canceled`. El agente no puede hacer ninguna de las dos cosas.
+Aprobar llama a `ucp.completar`: la tienda cierra la sesión como `completed` y crea el pedido. Rechazar la cierra como `canceled`. El agente no puede completar la compra: eso solo pasa cuando la persona aprueba. Sí puede cancelar la sesión por API si ninguna opción cumple el encargo.
 
 Pon tu llave de Gemini en la segunda terminal. `read -s` la pide sin mostrarla y sin guardarla en el historial:
 
@@ -882,7 +885,7 @@ Esperando tu decisión… (Ctrl+C para salir)
 :::
 
 :::info Aprobar desde el teléfono
-La vista previa web de Cloud Shell solo abre con tu cuenta de Google. Para probar la aprobación en el teléfono sin iniciar sesión, abre la [auditoría de la referencia en línea](https://codelab-tienda-cafe-z63pqhhmxq-uc.a.run.app/auditoria) y toca **Crear una compra de ejemplo**: crea la sesión por la misma API que usa el agente y te lleva a la página de aprobación.
+La vista previa web de Cloud Shell solo abre con tu cuenta de Google. Para probar la aprobación en el teléfono sin iniciar sesión, abre la [auditoría de la referencia en línea](https://codelab-tienda-cafe-z63pqhhmxq-uc.a.run.app/auditoria) y toca **Crear una compra de ejemplo**: crea la sesión con el mismo código de checkout que atiende al agente y te lleva a la página de aprobación.
 :::
 
 :::tip Si tu cuota de Gemini se acaba

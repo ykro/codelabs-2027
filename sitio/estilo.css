@@ -31,6 +31,7 @@ code, pre, kbd { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; 
   font-size: .88em; background: #EFEDE7; padding: .1em .35em; border-radius: 5px;
   overflow-wrap: anywhere;
 }
+img[src*="telefono"] { display: block; width: 100%; max-width: 360px; margin: 16px auto; }
 img { max-width: 100%; height: auto; border: 1px solid var(--linea); border-radius: var(--r); background: #fff; }
 
 .barra {
@@ -151,6 +152,8 @@ tr:last-child td { border-bottom: 0; }
   .bloque { margin-left: -16px; margin-right: -16px; border-radius: 0; border-left: 0; border-right: 0; }
   .aviso .bloque { margin-left: 0; margin-right: 0; border-radius: var(--r); border: 1px solid var(--linea); }
   .bloque pre { font-size: 12.5px; }
+  .tabla table { min-width: 560px; }
+  .tabla td code { overflow-wrap: normal; }
   .tabla { margin-left: -16px; margin-right: -16px; border-radius: 0; border-left: 0; border-right: 0; }
   .barra-titulo { display: none; }
   .pie .btn { flex: 1; padding: 0 12px; }
