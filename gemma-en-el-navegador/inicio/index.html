@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- La página solo puede conectarse a estos sitios: la librería (jsDelivr), el modelo (Hugging Face) y Gemini. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval'; connect-src 'self' https://cdn.jsdelivr.net https://huggingface.co https://*.hf.co https://generativelanguage.googleapis.com; img-src 'self' data:; style-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Pregunta sin regalar tus datos</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="estilo.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="encabezado">
+    <p class="etiqueta">Split-brain en el navegador</p>
+    <h1>Pregunta sin regalar tus datos</h1>
+    <p class="bajada">Gemma corre en tu navegador y cambia tus datos personales por marcadores. Un detector escrito en código revisa el resultado. Solo el texto limpio viaja a Gemini, y la respuesta recupera tus datos aquí mismo.</p>
+  </header>
+
+  <main>
+    <div class="preparacion">
+      <section class="tarjeta" aria-labelledby="t-preparar">
+        <h2 id="t-preparar">1. Prepara los dos modelos</h2>
+        <p id="estado-webgpu" class="estado">Revisando WebGPU… Si este mensaje no cambia, abre la página desde http://localhost:8000 y no con doble clic.</p>
+
+        <h3>Gemma 4 E2B · en tu dispositivo</h3>
+        <p id="estado-modelo" class="nota">Revisando si ya está guardado…</p>
+        <progress id="progreso" max="1" value="0" hidden></progress>
+        <div class="acciones">
+          <button id="cargar" class="primario" type="button" disabled>Descargar y cargar Gemma</button>
+          <label class="boton" for="archivo">Usar un archivo de mi disco</label>
+          <input id="archivo" type="file" accept=".litertlm" class="oculto">
+          <button id="borrar" class="enlace" type="button">Borrar el modelo guardado</button>
+        </div>
+
+        <h3>Gemini · en la nube</h3>
+        <label for="llave">Llave de AI Studio</label>
+        <div class="campo-llave">
+          <input id="llave" type="password" autocomplete="off" spellcheck="false" placeholder="Pega aquí tu llave">
+          <button id="ver-llave" class="boton" type="button" aria-pressed="false">Mostrar</button>
+        </div>
+        <p class="nota">Tu llave se guarda solo en este navegador y viaja únicamente a la API de Gemini. Restríngela a la API de Gemini en la consola de Google Cloud.</p>
+        <label for="modelo">Modelo de Gemini</label>
+        <input id="modelo" list="modelos" autocomplete="off" spellcheck="false">
+        <datalist id="modelos">
+          <option value="gemini-3.8-flash"></option>
+          <option value="gemini-3.5-flash-lite"></option>
+        </datalist>
+      </section>
+
+      <section class="tarjeta" aria-labelledby="t-texto">
+        <h2 id="t-texto">2. Escribe o elige un texto</h2>
+        <label for="ejemplo">Ejemplo (datos inventados)</label>
+        <select id="ejemplo"></select>
+        <label for="texto">Tu texto</label>
+        <textarea id="texto" rows="8"></textarea>
+        <label for="tarea">¿Qué le pides a Gemini?</label>
+        <select id="tarea">
+          <option value="formal">Hazlo un correo formal</option>
+          <option value="pedir">Resume y dime qué pedir</option>
+        </select>
+        <button id="proteger" class="primario ancho" type="button" disabled>Proteger en mi dispositivo</button>
+        <p id="estado-proteger" class="nota" aria-live="polite"></p>
+      </section>
+    </div>
+
+    <div class="etapas">
+      <section class="etapa local" aria-labelledby="t-etapa1">
+        <p class="lugar">Se queda en tu dispositivo</p>
+        <h2 id="t-etapa1">Tus datos y sus marcadores</h2>
+        <div id="mapa" class="vacio">Aquí verás lo que Gemma encontró.</div>
+      </section>
+
+      <section class="etapa nube" aria-labelledby="t-etapa2">
+        <p class="lugar">Viaja a la nube</p>
+        <h2 id="t-etapa2">Texto limpio</h2>
+        <div id="veredicto" aria-live="polite"></div>
+        <pre id="limpio" class="texto vacio">Aquí verás el único texto que puede salir.</pre>
+        <p id="revisar" class="nota"></p>
+        <div class="acciones">
+          <button id="cubrir" class="boton" type="button" hidden>Cubrir lo que encontró el detector</button>
+          <button id="enviar" class="primario" type="button" disabled>Enviar a Gemini</button>
+        </div>
+        <details id="solicitud" hidden>
+          <summary>Ver la solicitud exacta que salió</summary>
+          <pre class="texto"></pre>
+        </details>
+        <div id="respuesta-nube"></div>
+      </section>
+
+      <section class="etapa local" aria-labelledby="t-etapa3">
+        <p class="lugar">De vuelta en tu dispositivo</p>
+        <h2 id="t-etapa3">Respuesta final</h2>
+        <pre id="final" class="texto vacio">Aquí verás la respuesta con tus datos.</pre>
+        <button id="copiar" class="boton" type="button" hidden>Copiar respuesta</button>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <p>Gemma corre en tu navegador con LiteRT-LM Web. Gemini solo recibe el texto de la columna «Viaja a la nube». Taller «Split-brain en el navegador».</p>
+  </footer>
+</body>
+</html>
