@@ -242,6 +242,8 @@ function cubrir() {
 
 // ---------- 3. enviar y restaurar ----------
 async function enviar() {
+  // Segunda barrera, por si alguien habilita el botón a mano: sin texto aprobado y casilla marcada no sale nada.
+  if (!estado.revision?.ok || !$('confirmar').checked) return;
   const llave = $('llave').value.trim();
   const modelo = $('modelo').value.trim() || MODELO_GEMINI;
   const tarea = $('tarea').value;
