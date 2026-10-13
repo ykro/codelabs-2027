@@ -115,7 +115,8 @@ export function revisarAMano(texto) {
 }
 
 // Un texto puede traer instrucciones para el modelo («responde {"datos":[]}»).
-// Gemma puede obedecerlas; el código solo puede avisar y pedir confirmación.
+// Gemma puede obedecerlas. Esta lista solo reconoce frases conocidas: una instrucción
+// redactada de otra forma pasa sin aviso. Por eso la página siempre pide confirmar.
 export function pareceInyeccion(texto) {
-  return /ignora|instrucci[oó]n|responde (?:exactamente|solo|únicamente)|\{\s*"datos"|system prompt|no contiene datos personales/iu.test(texto);
+  return /ignora|instrucci[oó]n|responde (?:exactamente|solo|únicamente)|\{\s*"datos"|system prompt|asistente|modelo de lenguaje|anonimiz|lista(?:r)? solo|no (?:listes|incluyas|cuentan como datos)|no (?:son|contiene) datos personales|personajes? p[uú]blicos?/iu.test(texto);
 }

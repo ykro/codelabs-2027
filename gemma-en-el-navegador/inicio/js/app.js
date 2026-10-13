@@ -35,8 +35,8 @@ function mensajeError(error) {
 function actualizarBotones() {
   const llave = $('llave').value.trim();
   $('proteger').disabled = !estado.engine || estado.ocupado;
-  // Con avisos (Gemma no encontró nada, palabras dudosas, posible inyección) hay que confirmar a mano.
-  const falta = estado.avisos.length > 0 && !$('confirmar').checked;
+  // Siempre hay que confirmar a mano: la persona lee el texto limpio y es la última frontera.
+  const falta = !$('confirmar').checked;
   $('enviar').disabled = !estado.revision?.ok || falta || !llave || estado.ocupado;
   $('enviar').title = !llave ? 'Escribe tu llave de AI Studio' : '';
 }
@@ -183,19 +183,19 @@ function mostrarRevision() {
   } else if (estado.avisos.length) {
     veredicto.innerHTML = `<div class="veredicto duda"><strong>Revisa antes de enviar</strong>El detector no encontró formatos que reconozca, pero:${avisos}</div>`;
   } else {
-    veredicto.innerHTML = '<div class="veredicto bien"><strong>El detector aprobó el texto</strong>No quedó ningún dato que el código pueda reconocer. Revisa el texto limpio antes de enviarlo.</div>';
+    veredicto.innerHTML = '<div class="veredicto bien"><strong>El detector aprobó el texto</strong>No quedó ningún dato que el código pueda reconocer. Léelo antes de confirmar: un dato sin formato que Gemma no vio puede seguir ahí.</div>';
   }
   $('cubrir').hidden = revision.ok;
   $('revisar').textContent = !revision.ok && dudosas.length ? `Revisa también: ${dudosas.join(', ')}.` : '';
   $('confirmar').checked = false;
-  $('confirmar-caja').hidden = !(revision.ok && estado.avisos.length);
+  $('confirmar-caja').hidden = !revision.ok;
   actualizarBotones();
 }
 
 function mensajeEstado() {
   if (!estado.revision.ok) return 'El detector bloqueó el envío. Puedes cubrir lo que encontró o editar tu texto.';
   if (estado.avisos.length) return 'El detector no bloqueó, pero hay avisos: revisa el texto limpio y confirma antes de enviar.';
-  return 'Listo. Revisa el texto limpio y envíalo a Gemini.';
+  return 'Listo. Lee el texto limpio, confirma y envíalo a Gemini.';
 }
 
 async function proteger() {
